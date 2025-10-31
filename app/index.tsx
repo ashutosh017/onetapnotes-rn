@@ -1,10 +1,13 @@
+import MediaSelector from "@/components/media-selector";
 import { Feather, FontAwesome6 } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   FlatList,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   SafeAreaView,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -17,11 +20,14 @@ export default function WhatsAppNotesApp() {
     { id: 1, text: "Welcome to your personal notes!", timestamp: "10:00 AM" },
   ]);
   const [inputText, setInputText] = useState("");
+  const [showMediaSelector, setShowMediaSelector] = useState(false);
+
+  const toggleShowMediaSelector = () => setShowMediaSelector(!showMediaSelector);
 
   const handleSend = () => {
     if (inputText.trim()) {
-      setMessages([
-        ...messages,
+      setMessages((prev) => [
+        ...prev,
         {
           id: Date.now(),
           text: inputText,
@@ -37,6 +43,7 @@ export default function WhatsAppNotesApp() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      {/* ✅ Only ONE KeyboardAvoidingView */}
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -50,7 +57,7 @@ export default function WhatsAppNotesApp() {
 
         {/* Chat Messages */}
         <FlatList
-          data={messages.reverse()}
+          data={[...messages].reverse()}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <View style={styles.messageWrapper}>
@@ -64,35 +71,50 @@ export default function WhatsAppNotesApp() {
           inverted
         />
 
-        {/* Input Area */}
-        <View style={styles.inputArea}>
-          <FontAwesome6
-            color={"#fff"}
-            name="add"
-            size={24}
-            style={styles.attachment}
-          />
-          <TextInput
-            style={styles.textInput}
-            value={inputText}
-            onChangeText={setInputText}
-            placeholder="Type a note..."
-            multiline
-          />
+        {/* ✅ Input Area */}
+        <ScrollView
+          style={{ flexGrow: 0 }}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.inputArea}>
+            <Pressable onPress={toggleShowMediaSelector}>
+              <FontAwesome6
+                color={"#fff"}
+                name="add"
+                size={24}
+                style={styles.attachment}
+              />
+            </Pressable>
 
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              inputText.trim()
-                ? styles.sendButtonActive
-                : styles.sendButtonDisabled,
-            ]}
-            onPress={handleSend}
-            disabled={!inputText.trim()}
-          >
-            <Feather name="send" size={20} color="#fff" />
-          </TouchableOpacity>
-        </View>
+            <TextInput
+              style={styles.textInput}
+              value={inputText}
+              onChangeText={setInputText}
+              placeholder="Type a note..."
+              multiline
+            />
+
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                inputText.trim()
+                  ? styles.sendButtonActive
+                  : styles.sendButtonDisabled,
+              ]}
+              onPress={handleSend}
+              disabled={!inputText.trim()}
+            >
+              <Feather name="send" size={20} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+
+        {/* Media Selector */}
+        <MediaSelector
+          onClose={toggleShowMediaSelector}
+          visible={showMediaSelector}
+        />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -121,11 +143,12 @@ const styles = StyleSheet.create({
   timestamp: { color: "#666", fontSize: 10, textAlign: "right", marginTop: 3 },
   inputArea: {
     flexDirection: "row",
-    alignItems: "flex-end",
     backgroundColor: "#292828",
+    alignItems: "center",
+    borderTopWidth: 1,
+    borderColor: "#555",
     padding: 8,
   },
-  iconButton: { padding: 6 },
   textInput: {
     flex: 1,
     backgroundColor: "#fff",
@@ -139,15 +162,8 @@ const styles = StyleSheet.create({
   sendButtonActive: { backgroundColor: "#128C7E" },
   sendButtonDisabled: { backgroundColor: "#bbb" },
   attachment: {
-    height: 50,
-    width: 50,
-    // borderColor:"#000000",
-    // borderWidth:2,
-
-    display: "flex",
+    padding: 5,
     alignItems: "center",
     justifyContent: "center",
-    // transform: [{ rotate: "135deg" }],
-    // backgroundColor: "#000000",
   },
 });
